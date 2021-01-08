@@ -1,7 +1,5 @@
 ---
 
-Update  
-
 languages:
 - php
 page_type: sample
