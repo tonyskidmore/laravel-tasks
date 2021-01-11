@@ -2,13 +2,13 @@
 
 # ----------------------
 # KUDU Deployment Script
-# Version: 1.0.17
+# Version: 0.2.2
 # ----------------------
 
 # Helpers
 # -------
 
-exitWithMessageOnError() {
+exitWithMessageOnError () {
   if [ ! $? -eq 0 ]; then
     echo "An error has occurred during web site deployment."
     echo $1
@@ -29,7 +29,7 @@ exitWithMessageOnError "Missing node.js executable, please install node.js, if a
 SCRIPT_DIR="${BASH_SOURCE[0]%\\*}"
 SCRIPT_DIR="${SCRIPT_DIR%/*}"
 ARTIFACTS=$SCRIPT_DIR/../artifacts
-KUDU_SYNC_CMD=${KUDU_SYNC_CMD//\"/}
+KUDU_SYNC_CMD=${KUDU_SYNC_CMD//\"}
 
 if [[ ! -n "$DEPLOYMENT_SOURCE" ]]; then
   DEPLOYMENT_SOURCE=$SCRIPT_DIR
@@ -64,69 +64,82 @@ if [[ ! -n "$KUDU_SYNC_CMD" ]]; then
   fi
 fi
 
-# PHP Helpers
-# -----------
+# Node Helpers
+# ------------
 
-initializeDeploymentConfig() {
-  if [ ! -e "$COMPOSER_ARGS" ]; then
-    COMPOSER_ARGS="--no-progress --no-dev --verbose"
-    echo "No COMPOSER_ARGS variable declared in App Settings, using the default settings"
+selectNodeVersion () {
+  if [[ -n "$KUDU_SELECT_NODE_VERSION_CMD" ]]; then
+    SELECT_NODE_VERSION="$KUDU_SELECT_NODE_VERSION_CMD \"$DEPLOYMENT_SOURCE\" \"$DEPLOYMENT_TARGET\" \"$DEPLOYMENT_TEMP\""
+    eval $SELECT_NODE_VERSION
+    exitWithMessageOnError "select node version failed"
+
+    if [[ -e "$DEPLOYMENT_TEMP/__nodeVersion.tmp" ]]; then
+      NODE_EXE=`cat "$DEPLOYMENT_TEMP/__nodeVersion.tmp"`
+      exitWithMessageOnError "getting node version failed"
+    fi
+
+    if [[ -e "$DEPLOYMENT_TEMP/.tmp" ]]; then
+      NPM_JS_PATH=`cat "$DEPLOYMENT_TEMP/__npmVersion.tmp"`
+      exitWithMessageOnError "getting npm version failed"
+    fi
+
+    if [[ ! -n "$NODE_EXE" ]]; then
+      NODE_EXE=node
+    fi
+
+    NPM_CMD="\"$NODE_EXE\" \"$NPM_JS_PATH\""
   else
-    echo "Using COMPOSER_ARGS variable declared in App Setting"
+    NPM_CMD=npm
+    NODE_EXE=node
   fi
-  echo "Composer settings: $COMPOSER_ARGS"
 }
 
 ##################################################################################################################################
 # Deployment
 # ----------
 
-echo PHP deployment
-
 # 1. KuduSync
 if [[ "$IN_PLACE_DEPLOYMENT" -ne "1" ]]; then
+  echo Running KuduSync
   "$KUDU_SYNC_CMD" -v 50 -f "$DEPLOYMENT_SOURCE" -t "$DEPLOYMENT_TARGET" -n "$NEXT_MANIFEST_PATH" -p "$PREVIOUS_MANIFEST_PATH" -i ".git;.hg;.deployment;deploy.sh"
   exitWithMessageOnError "Kudu Sync failed"
 fi
 
-# 2. Verify composer installed
-#hash composer 2>/dev/null
-#exitWithMessageOnError "Missing composer executable"
-
-# 3. Initialize Composer Config
-initializeDeploymentConfig
-
-# 4. Use composer
-echo "$DEPLOYMENT_TARGET"
+# 2. Install Composer modules
 if [ -e "$DEPLOYMENT_TARGET/composer.json" ]; then
-  echo "Found composer.json"
-  # shellcheck disable=SC2164
-  pushd "$DEPLOYMENT_TARGET"
-  php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-  php -r "if (hash_file('sha384', 'composer-setup.php') === 'e0012edf3e80b6978849f5eff0d4b4e4c79ff1609dd1e613307e16318854d24ae64f26d17af3ef0bf7cfb710ca74755a') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
-  php composer-setup.php
-  php -r "unlink('composer-setup.php');"
-  php composer.phar install $COMPOSER_ARGS
-  exitWithMessageOnError "Composer install failed"
-  # shellcheck disable=SC2164
-  popd
+  echo Running composer install
+  cd "$DEPLOYMENT_TARGET"
+  eval php composer.phar install
+  exitWithMessageOnError "composer failed"
+  cd - > /dev/null
 fi
 
-echo "Laravel deployment"
+# 3. Install NPM packages
+if [ -e "$DEPLOYMENT_TARGET/package.json" ]; then
+  echo Running npm install
+  cd "$DEPLOYMENT_TARGET"
+  eval npm install --production
+  exitWithMessageOnError "npm failed"
+  cd - > /dev/null
+fi
 
-# shellcheck disable=SC2164
-pushd "$DEPLOYMENT_TARGET"
-curl https://kpas-lti.azurewebsites.net/api/command/migrate
-echo -e "\n"
-php artisan cache:clear
-php artisan route:clear
-php artisan route:cache
-php artisan config:clear
-php artisan config:cache
-exitWithMessageOnError "Laravel deploy failed"
-# shellcheck disable=SC2164
-popd
-
+# 4. Install Bower modules
+if [ -e "$DEPLOYMENT_TARGET/bower.json" ]; then
+  echo Running bower install
+  cd "$DEPLOYMENT_TARGET"
+  eval ./node_modules/.bin/bower install
+  exitWithMessageOnError "bower failed"
+  cd - > /dev/null
+fi
 
 ##################################################################################################################################
+
+# Post deployment stub
+if [[ -n "$POST_DEPLOYMENT_ACTION" ]]; then
+  POST_DEPLOYMENT_ACTION=${POST_DEPLOYMENT_ACTION//\"}
+  cd "${POST_DEPLOYMENT_ACTION_DIR%\\*}"
+  "$POST_DEPLOYMENT_ACTION"
+  exitWithMessageOnError "post deployment action failed"
+fi
+
 echo "Finished successfully."
