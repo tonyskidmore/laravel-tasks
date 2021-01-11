@@ -2,4 +2,4 @@
 
 echo "prebuild.sh"
 
-touch prebuild.txt
+# touch prebuild.txt
