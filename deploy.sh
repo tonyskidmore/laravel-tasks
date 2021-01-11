@@ -108,11 +108,8 @@ fi
 # 2. Install Composer modules 
 if [ -e "$DEPLOYMENT_TARGET/composer.json" ]; then
   printenv
-  update-alternatives --set php "/usr/bin/php${PHP_VERSION}"
-  update-alternatives --set phar "/usr/bin/phar${PHP_VERSION}"
-  update-alternatives --set phpdbg "/usr/bin/phpdbg${PHP_VERSION}"
-  update-alternatives --set php-cgi "/usr/bin/php-cgi${PHP_VERSION}"
-  update-alternatives --set phar.phar "/usr/bin/phar.phar${PHP_VERSION}"
+  echo "PATH=$PATH"
+  which php
   php -version
   echo Running composer install
   cd "$DEPLOYMENT_TARGET"
