@@ -4,4 +4,4 @@ echo "prebuild.sh"
 
 printenv
 
-# touch prebuild.txt
+touch prebuild.txt
