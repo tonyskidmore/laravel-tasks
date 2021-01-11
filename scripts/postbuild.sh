@@ -2,4 +2,4 @@
 
 echo "postbuild.sh"
 
-# touch postbuild.txt
+touch postbuild.txt
