@@ -108,11 +108,11 @@ fi
 # 2. Install Composer modules 
 if [ -e "$DEPLOYMENT_TARGET/composer.json" ]; then
   printenv
-  sudo update-alternatives --set php "/usr/bin/php${PHP_VERSION}"
-  sudo update-alternatives --set phar "/usr/bin/phar${PHP_VERSION}"
-  sudo update-alternatives --set phpdbg "/usr/bin/phpdbg${PHP_VERSION}"
-  sudo update-alternatives --set php-cgi "/usr/bin/php-cgi${PHP_VERSION}"
-  sudo update-alternatives --set phar.phar "/usr/bin/phar.phar${PHP_VERSION}"
+  update-alternatives --set php "/usr/bin/php${PHP_VERSION}"
+  update-alternatives --set phar "/usr/bin/phar${PHP_VERSION}"
+  update-alternatives --set phpdbg "/usr/bin/phpdbg${PHP_VERSION}"
+  update-alternatives --set php-cgi "/usr/bin/php-cgi${PHP_VERSION}"
+  update-alternatives --set phar.phar "/usr/bin/phar.phar${PHP_VERSION}"
   php -version
   echo Running composer install
   cd "$DEPLOYMENT_TARGET"
