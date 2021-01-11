@@ -37,12 +37,23 @@ steps:
   inputs:
     PathtoPublish: $(build.artifactstagingdirectory)
 
-- task: AzureWebApp@1
-  displayName: Azure Web App Deploy
+#- task: AzureWebApp@1
+#  displayName: Azure Web App Deploy
+#  inputs:
+#    azureSubscription: $(serviceConnectionToAzure)
+#    appType: webAppLinux
+#    appName: $(appName)
+#    package: $(build.artifactstagingdirectory)/**/*.zip
+#    runtimeStack: 'PHP|7.4'
+#    appSettings: '-SCM_DO_BUILD_DURING_DEPLOYMENT true'
+
+- task: AzureRmWebAppDeployment@4
+  displayName: 'Azure App Service Deploy: ajs-php-mysql'
   inputs:
     azureSubscription: $(serviceConnectionToAzure)
     appType: webAppLinux
-    appName: $(appName)
+    WebAppName: $(appName)
     package: $(build.artifactstagingdirectory)/**/*.zip
-    runtimeStack: 'PHP|7.4'
-    appSettings: '-SCM_DO_BUILD_DURING_DEPLOYMENT true'
+    RuntimeStack: 'PHP|7.4'
+    ScriptType: 'File Path'
+    ScriptPath: scripts/post.sh
