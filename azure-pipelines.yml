@@ -45,3 +45,4 @@ steps:
     appName: $(appName)
     package: $(build.artifactstagingdirectory)/**/*.zip
     runtimeStack: 'PHP|7.4'
+    appSettings: '-SCM_DO_BUILD_DURING_DEPLOYMENT true'
