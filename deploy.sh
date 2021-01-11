@@ -110,10 +110,10 @@ if [ -e "$DEPLOYMENT_TARGET/composer.json" ]; then
   printenv
   echo "PATH=$PATH"
   which php
-  /usr/local/bin/php -version
+  php -version
   echo Running composer install
   cd "$DEPLOYMENT_TARGET"
-  eval /usr/local/bin/php composer.phar install
+  eval php composer.phar install
   exitWithMessageOnError "composer failed"
   cd - > /dev/null
 fi
