@@ -55,5 +55,5 @@ steps:
     WebAppName: $(appName)
     package: $(build.artifactstagingdirectory)/**/*.zip
     RuntimeStack: 'PHP|7.4'
-    ScriptType: 'File Path'
-    ScriptPath: scripts/post.sh
+    # ScriptType: 'File Path'
+    # ScriptPath: scripts/post.sh
