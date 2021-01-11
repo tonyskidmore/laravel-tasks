@@ -44,4 +44,4 @@ steps:
     appType: webAppLinux
     appName: $(appName)
     package: $(build.artifactstagingdirectory)/**/*.zip
-    runtimeStack: 'PHP|7.4
+    runtimeStack: 'PHP|7.4'
